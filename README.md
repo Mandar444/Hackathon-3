@@ -1,4 +1,4 @@
-# 💧 Hydro-Core: Enterprise Water Prediction System
+# 💧 Hackathon v4.5: Enterprise Water Prediction System
 
 ## 📌 Overview
 

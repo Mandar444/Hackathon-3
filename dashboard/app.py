@@ -10,7 +10,7 @@ from datetime import datetime
 
 # --- SETTINGS ---
 st.set_page_config(
-    page_title="HYDRO-CORE AI",
+    page_title="HACKATHON v4.5",
     layout="wide"
 )
 
@@ -57,8 +57,8 @@ model, metadata = load_production_model()
 
 # --- SIDEBAR CONTROL ---
 with st.sidebar:
-    st.markdown("<h2 style='color: #3b82f6;'>HYDRO-CORE</h2>", unsafe_allow_html=True)
-    st.caption("PRODUCTION DEPLOYMENT v4.5")
+    st.markdown("<h2 style='color: #3b82f6;'>HACKATHON v4.5</h2>", unsafe_allow_html=True)
+    st.caption("PRODUCTION DEPLOYMENT")
     st.markdown("---")
     choice = st.radio("MODES", ["NETWORK OVERVIEW", "PREDICTION ENGINE", "SYSTEM LOGS"])
     st.markdown("---")

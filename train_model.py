@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error
 
 """
-HYDRO-CORE MODEL ENGINE (v4.5)
+HYDRO-CORE MODEL ENGINE (HACKATHON v4.5)
 ------------------------------
 This script handles the full ML pipeline:
 1. SQL Data Extraction
@@ -23,7 +23,7 @@ DAY_MAP = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4
 PHASE_MAP = {'Normal': 0, 'Exam': 1, 'Vacation': 2}
 
 def run_training_pipeline(db_path='campus_water.db', model_output='models/water_model.pkl'):
-    print("--- Initializing Production Training Pipeline ---")
+    print("--- Initializing HACKATHON v4.5 Training Pipeline ---")
     
     if not os.path.exists(db_path):
         print(f"Error: {db_path} not found. Run data_generation.py first.")
