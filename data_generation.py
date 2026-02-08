@@ -82,7 +82,7 @@ def setup_sql_database(num_records=2500):
     
     # CONNECT TO SQL (Ensures data is appendable and persistent)
     conn = sqlite3.connect('campus_water.db') 
-    df_gen.to_sql('water_records', conn, if_exists='replace', index=False)
+    df_gen.to_sql('water_records', conn, if_exists='append', index=False)
     conn.close()
     
     print(f"[SUCCESS] Database created with {len(df_gen)} records.")
