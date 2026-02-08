@@ -10,9 +10,8 @@ from datetime import datetime
 
 # --- SETTINGS ---
 st.set_page_config(
-    page_title="HYDRO-CORE AI | Enterprise Hub",
-    layout="wide",
-    page_icon="🛡️"
+    page_title="HYDRO-CORE AI",
+    layout="wide"
 )
 
 # --- THEME INJECTION ---
@@ -58,26 +57,26 @@ model, metadata = load_production_model()
 
 # --- SIDEBAR CONTROL ---
 with st.sidebar:
-    st.markdown("<h2 style='color: #3b82f6;'>🛡️ HYDRO-CORE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #3b82f6;'>HYDRO-CORE</h2>", unsafe_allow_html=True)
     st.caption("PRODUCTION DEPLOYMENT v4.5")
     st.markdown("---")
-    choice = st.radio("MODES", ["🌐 NETWORK OVERVIEW", "🔮 PREDICTION ENGINE", "📂 SYSTEM LOGS"])
+    choice = st.radio("MODES", ["NETWORK OVERVIEW", "PREDICTION ENGINE", "SYSTEM LOGS"])
     st.markdown("---")
     
     if model:
-        st.success("✅ AI Engine: Online")
+        st.success("AI Engine: Online")
         st.info(f"Deployed: {metadata['train_date']}")
         st.info(f"Verified Accuracy: {metadata['accuracy']*100:.1f}%")
     else:
-        st.error("⚠️ AI Model Offline")
+        st.error("AI Model Offline")
         st.warning("Run train_model.py to deploy.")
 
 # --- UI LOGIC ---
 if df is None:
     st.error("DATABASE NOT INITIALIZED. Run data_generation.py.")
 else:
-    if choice == "🌐 NETWORK OVERVIEW":
-        st.title("🌐 CAMPUS INFRASTRUCTURE TELEMETRY")
+    if choice == "NETWORK OVERVIEW":
+        st.title("CAMPUS INFRASTRUCTURE TELEMETRY")
         
         # Summary
         c1, c2, c3 = st.columns(3)
@@ -88,7 +87,7 @@ else:
         st.markdown("---")
         
         # Heatmap
-        st.subheader("🔥 CONSUMPTION INTENSITY (DAY VS HOUR)")
+        st.subheader("CONSUMPTION INTENSITY (DAY VS HOUR)")
         pivot_df = df.pivot_table(index='day_of_week', columns='time_of_day', values='consumption_liters', aggfunc='mean')
         pivot_df = pivot_df.reindex(list(DAY_MAP.keys()))
         fig_heat = px.imshow(pivot_df, labels=dict(x="Hour", y="Day", color="Liters"),
@@ -102,8 +101,8 @@ else:
             </div>
         """, unsafe_allow_html=True)
 
-    elif choice == "🔮 PREDICTION ENGINE":
-        st.title("🛡️ AI FORECASTING CORE")
+    elif choice == "PREDICTION ENGINE":
+        st.title("AI FORECASTING CORE")
         
         with st.container():
             c1, c2, c3 = st.columns(3)
@@ -138,14 +137,14 @@ else:
                 """, unsafe_allow_html=True)
 
                 # Evidence Match
-                st.subheader("🏛️ HISTORICAL VERIFICATION")
+                st.subheader("HISTORICAL VERIFICATION")
                 similar = df[(df['building_type'] == b_type) & (abs(df['time_of_day'] - hour) <= 1) & (df['academic_phase'] == phase)].tail(3)
                 if not similar.empty:
                     st.write("Current prediction correlates with these verified records:")
                     st.dataframe(similar[['day_of_week', 'time_of_day', 'consumption_liters']], hide_index=True)
                 
-                st.info(f"💡 AI Insight: The predicted load of {prediction:.0f}L is triggered by {b_type} activity patterns during the {phase} cycle.")
+                st.info(f"AI Insight: The predicted load of {prediction:.0f}L is triggered by {b_type} activity patterns during the {phase} cycle.")
 
-    elif choice == "📂 SYSTEM LOGS":
-        st.title("📂 SQL DATA LEDGER")
+    elif choice == "SYSTEM LOGS":
+        st.title("SQL DATA LEDGER")
         st.dataframe(df.tail(200), use_container_width=True)

@@ -41,8 +41,9 @@ def run_training_pipeline(db_path='campus_water.db', model_output='models/water_
     df['phase_code'] = df['academic_phase'].map(PHASE_MAP)
 
     # 3. SCRUBBING (Hard-Limit Filter)
-    df_clean = df[df['consumption_liters'] < 8000].copy()
-    print(f"Cleanup: Scrubbed {len(df) - len(df_clean)} outliers (>8000L).")
+    # User requested outlier cap at 5000L
+    df_clean = df[df['consumption_liters'] <= 5000].copy()
+    print(f"Cleanup: Scrubbed {len(df) - len(df_clean)} outliers (>5000L).")
 
     # 4. TRAINING
     features = ['building_code', 'day_code', 'phase_code', 'occupancy_percentage', 'time_of_day']
