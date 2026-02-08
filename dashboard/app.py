@@ -10,8 +10,9 @@ from datetime import datetime
 
 # --- SETTINGS ---
 st.set_page_config(
-    page_title="HACKATHON v4.5",
-    layout="wide"
+    page_title="HACKATHON v4.5 AI",
+    layout="wide",
+    page_icon="💧"
 )
 
 # --- THEME INJECTION ---
@@ -57,26 +58,26 @@ model, metadata = load_production_model()
 
 # --- SIDEBAR CONTROL ---
 with st.sidebar:
-    st.markdown("<h2 style='color: #3b82f6;'>HACKATHON v4.5</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #3b82f6;'>🛡️ HACKATHON v4.5</h2>", unsafe_allow_html=True)
     st.caption("PRODUCTION DEPLOYMENT")
     st.markdown("---")
-    choice = st.radio("MODES", ["NETWORK OVERVIEW", "PREDICTION ENGINE", "SYSTEM LOGS"])
+    choice = st.radio("OPERATIONAL MODES", ["🌐 NETWORK OVERVIEW", "🔮 PREDICTION ENGINE", "📂 SYSTEM LOGS"])
     st.markdown("---")
     
     if model:
-        st.success("AI Engine: Online")
-        st.info(f"Deployed: {metadata['train_date']}")
-        st.info(f"Verified Accuracy: {metadata['accuracy']*100:.1f}%")
+        st.success("✅ AI Engine: Online")
+        st.info(f"📅 Deployed: {metadata['train_date']}")
+        st.info(f"📊 Verified Accuracy: {metadata['accuracy']*100:.1f}%")
     else:
-        st.error("AI Model Offline")
+        st.error("❌ AI Model Offline")
         st.warning("Run train_model.py to deploy.")
 
 # --- UI LOGIC ---
 if df is None:
-    st.error("DATABASE NOT INITIALIZED. Run data_generation.py.")
+    st.error("🚨 DATABASE NOT INITIALIZED. Run data_generation.py.")
 else:
-    if choice == "NETWORK OVERVIEW":
-        st.title("CAMPUS INFRASTRUCTURE TELEMETRY")
+    if choice == "🌐 NETWORK OVERVIEW":
+        st.title("🌐 CAMPUS INFRASTRUCTURE TELEMETRY")
         
         # Summary
         c1, c2, c3 = st.columns(3)
@@ -87,7 +88,7 @@ else:
         st.markdown("---")
         
         # Heatmap
-        st.subheader("CONSUMPTION INTENSITY (DAY VS HOUR)")
+        st.subheader("🔥 CONSUMPTION INTENSITY (DAY VS HOUR)")
         pivot_df = df.pivot_table(index='day_of_week', columns='time_of_day', values='consumption_liters', aggfunc='mean')
         pivot_df = pivot_df.reindex(list(DAY_MAP.keys()))
         fig_heat = px.imshow(pivot_df, labels=dict(x="Hour", y="Day", color="Liters"),
@@ -96,30 +97,30 @@ else:
         
         st.markdown("""
             <div class="graph-explanation">
-                <b>STRATEGIC INSIGHT:</b> This heatmap reveals the 'Hot Windows' where water demand is highest. 
+                <b>🔍 STRATEGIC INSIGHT:</b> This heatmap reveals the 'Hot Windows' where water demand is highest. 
                 Management should use this to optimize pump scheduling and prevent dry-tank scenarios.
             </div>
         """, unsafe_allow_html=True)
 
-    elif choice == "PREDICTION ENGINE":
-        st.title("AI FORECASTING CORE")
+    elif choice == "🔮 PREDICTION ENGINE":
+        st.title("🔮 AI FORECASTING CORE")
         
         with st.container():
             c1, c2, c3 = st.columns(3)
             with c1:
-                b_type = st.selectbox("SECTOR", list(BUILDING_MAP.keys()))
-                day = st.selectbox("DAY", list(DAY_MAP.keys()))
+                b_type = st.selectbox("🎯 SECTOR", list(BUILDING_MAP.keys()))
+                day = st.selectbox("📅 DAY", list(DAY_MAP.keys()))
             with c2:
-                phase = st.radio("PHASE", list(PHASE_MAP.keys()), horizontal=True)
-                occ = st.slider("OCCUPANCY %", 0, 100, 75)
+                phase = st.radio("🎓 PHASE", list(PHASE_MAP.keys()), horizontal=True)
+                occ = st.slider("👥 OCCUPANCY %", 0, 100, 75)
             with c3:
-                hour = st.select_slider("TIME WINDOW", options=list(range(24)), value=12,
+                hour = st.select_slider("🕒 TIME WINDOW", options=list(range(24)), value=12,
                                        format_func=lambda x: f"{x}:00 to {x+1}:00")
-                run = st.button("EXECUTE NEURAL INFERENCE")
+                run = st.button("🚀 EXECUTE NEURAL INFERENCE")
 
         if run:
             if model is None:
-                st.error("Deployment Error: Primary brain (models/water_model.pkl) not found.")
+                st.error("❌ Deployment Error: Primary brain (models/water_model.pkl) not found.")
             else:
                 input_data = pd.DataFrame([{
                     'building_code': BUILDING_MAP[b_type], 'day_code': DAY_MAP[day], 
@@ -132,19 +133,19 @@ else:
                     <div class="hud-container">
                         <div class="hud-label">ESTIMATED WATER LOAD</div>
                         <div class="hud-value">{prediction:.2f}L</div>
-                        <div class="hud-label">SYSTEM INTEGRITY: VERIFIED (R2 {metadata['accuracy']:.2f})</div>
+                        <div class="hud-label">🛡️ SYSTEM INTEGRITY: VERIFIED (R2 {metadata['accuracy']:.2f})</div>
                     </div>
                 """, unsafe_allow_html=True)
 
                 # Evidence Match
-                st.subheader("HISTORICAL VERIFICATION")
+                st.subheader("🏛️ HISTORICAL VERIFICATION")
                 similar = df[(df['building_type'] == b_type) & (abs(df['time_of_day'] - hour) <= 1) & (df['academic_phase'] == phase)].tail(3)
                 if not similar.empty:
                     st.write("Current prediction correlates with these verified records:")
                     st.dataframe(similar[['day_of_week', 'time_of_day', 'consumption_liters']], hide_index=True)
                 
-                st.info(f"AI Insight: The predicted load of {prediction:.0f}L is triggered by {b_type} activity patterns during the {phase} cycle.")
+                st.info(f"💡 AI Insight: The predicted load of {prediction:.0f}L is triggered by {b_type} activity patterns during the {phase} cycle.")
 
-    elif choice == "SYSTEM LOGS":
-        st.title("SQL DATA LEDGER")
+    elif choice == "📂 SYSTEM LOGS":
+        st.title("📂 SQL DATA LEDGER")
         st.dataframe(df.tail(200), use_container_width=True)
