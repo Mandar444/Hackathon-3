@@ -1,17 +1,17 @@
-# 💧 Hackathon v4.5: Enterprise Water Prediction System
+#  Hackathon v4.5: Enterprise Water Prediction System
 
-## 📌 Overview
+##  Overview
 
 Hydro-Core is an AI-driven decision support system designed to manage campus water networks through high-precision forecasting. By analyzing factors such as Building Type, Human Occupancy, Temporal Cycles, and Academic Phases, the system provides actionable insights to prevent wastage and optimize supply.
 
-## 🚀 Key Features
+##  Key Features
 
 - **SQL-First Architecture**: Uses an appendable SQLite database for persistent telemetry logging.
 - **AI Model v4.0 (Random Forest)**: High-accuracy predictor (90%+ R²) considering 5 real-world factors.
 - **Evidence-Based Dashboard**: Interactive Streamlit UI with historical matches and AI reasoning.
 - **Automated Anomaly Scrubbing**: Simple threshold-based cleaning to ignore "garbage" sensor readings.
 
-## 📂 Project Structure (Cleaned Repository)
+##  Project Structure (Cleaned Repository)
 
 - `dashboard/app.py`: The primary Hackathon v4.5 Hub.
 - `data_generation.py`: The core Data Synthesis and SQL logic script.
@@ -19,7 +19,7 @@ Hydro-Core is an AI-driven decision support system designed to manage campus wat
 - `campus_water.db`: SQLite database storing all historical records.
 - `requirements.txt`: System dependencies.
 
-## 🛠️ Installation & Setup
+##  Installation & Setup
 
 1. **Install Dependencies**:
    ```bash
@@ -34,7 +34,7 @@ Hydro-Core is an AI-driven decision support system designed to manage campus wat
    streamlit run dashboard/app.py
    ```
 
-## 📊 Prediction Engine
+##  Prediction Engine
 
 The system uses a **Random Forest Regressor** trained on historical campus cycles. It incorporates:
 
