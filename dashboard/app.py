@@ -173,41 +173,6 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- TRUTH VERIFICATION SYSTEM (REFERENCE DATA) ---
-                st.markdown("---")
-                st.subheader("🏛️ HISTORICAL REFERENCE DATA")
-                
-                # Fetching reference data (Same Building + Day + Hour)
-                ref_df = df[(df['building_type'] == b_type) & 
-                           (df['day_of_week'] == day) &
-                           (abs(df['time_of_day'] - hour) <= 1)].copy()
-                
-                if not ref_df.empty:
-                    rec_avg = ref_df['consumption_liters'].mean()
-                    rec_count = len(ref_df)
-                    
-                    m1, m2, m3 = st.columns(3)
-                    with m1:
-                        st.metric("HISTORICAL AVG", f"{rec_avg:.0f} L")
-                    with m2:    
-                        st.metric("SAMPLE SIZE", f"{rec_count} RECORDS")
-                    with m3:
-                        diff_pct = abs(prediction - rec_avg) / rec_avg * 100
-                        st.metric("AI DEVIATION", f"{diff_pct:.1f} %", delta_color="inverse")
-
-                    st.markdown(f"""
-                        <div class="graph-explanation">
-                            <b>REFERENCE PROOF:</b> In the SQL database, we found <b>{rec_count}</b> historical 
-                            instances that match these conditions (<b>{b_type}</b> on <b>{day}</b>). 
-                            The actual average consumption for those events was <b>{rec_avg:.0f}L</b>.
-                            <br><br>
-                            This proves the AI's prediction of <b>{prediction:.0f}L</b> is grounded in 
-                            real-world campus patterns.
-                        </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.warning("⚠️ SYTHETIC BOUNDARY: No identical historical records found. AI is projecting based on global trends.")
-
                 # --- NEW: COMPARATIVE ANALYSIS & FEATURE IMPORTANCE ---
                 e_col1, e_col2 = st.columns(2)
                 
