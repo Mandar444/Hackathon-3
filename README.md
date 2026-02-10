@@ -16,7 +16,7 @@ Hydro-Core is an AI-driven decision support system designed to manage campus wat
 - `dashboard/app.py`: The primary Hackathon v4.5 Hub.
 - `data_generation.py`: The core Data Synthesis and SQL logic script.
 - `train_model.py`: The production Model Training and Serialization script.
-- `campus_water.db`: SQLite database storing all historical records.
+- `campus_water.db`: SQLite database (Generated locally by running scripts).
 - `requirements.txt`: System dependencies.
 
 ##  Installation & Setup
