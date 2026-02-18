@@ -1,0 +1,4 @@
+campus_water.db
+models/
+__pycache__/
+*.pyc
