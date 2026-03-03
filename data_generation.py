@@ -18,7 +18,7 @@ MATHEMATICAL LOGIC:
 5. Occupancy: A linear multiplier representing the percentage of people in the building.
 """
 
-def setup_sql_database(num_records=2500):
+def setup_sql_database(num_records=10000):
     np.random.seed(42)
     data = []
     
@@ -26,7 +26,7 @@ def setup_sql_database(num_records=2500):
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     phases = ['Normal', 'Exam', 'Vacation']
     
-    print(f"--- Generating {num_records} Realistic Metadata Records ---")
+    print(f"--- Generating {num_records} Complex Non-Linear Records ---")
 
     for _ in range(num_records):
         b_type = np.random.choice(building_types)
@@ -35,39 +35,49 @@ def setup_sql_database(num_records=2500):
         hour = np.random.randint(0, 24)
         occ = np.random.randint(10, 100)
         
-        # 1. BASE CAPACITY (Max liters per hour at 100% occupancy)
+        # 1. BASE CAPACITY
         base_capacity = 4000 if b_type == 'Hostel' else 2100
         
-        # 2. TIME OF DAY INFLUENCE (The 'Spike' Logic)
-        time_mult = 1.0
-        if 6 <= hour <= 9: 
-            time_mult = 1.6  # Morning Peak (Showers/Breakfast)
-        elif 18 <= hour <= 21: 
-            time_mult = 1.4  # Evening Peak
-        elif 0 <= hour <= 5: 
-            time_mult = 0.2  # Night Minimum (Baseline leaks only)
+        # 2. NON-LINEAR TIME OF DAY (Sinusoidal waves instead of step functions)
+        # Main peak at 8 AM and 8 PM
+        time_factor = (np.sin((hour - 8) * (2 * np.pi / 24)) + 1) / 2
+        # Secondary peak/variance
+        time_factor += 0.5 * (np.cos((hour - 20) * (2 * np.pi / 24)) + 1) / 2
         
-        # 3. WEEKEND VS WEEKDAY LOGIC
+        # 3. NON-LINEAR OCCUPANCY (Polynomial relationship)
+        # Usage isn't just occ/100; maybe it's quadratic (small crowds use less, large crowds use exponentially more)
+        occ_factor = (occ / 100) ** 1.5 
+        
+        # 4. WEEKEND VS WEEKDAY (Interaction effect)
         day_mult = 1.0
         if day in ['Saturday', 'Sunday']:
-            # Hostels stay busy, Academic blocks go quiet
-            day_mult = 1.1 if b_type == 'Hostel' else 0.3
+            day_mult = 1.2 if b_type == 'Hostel' else 0.2
             
-        # 4. ACADEMIC CYCLE LOGIC
+        # 5. PHASE INFLUENCE
         phase_mult = 1.0
         if phase == 'Vacation': 
-            phase_mult = 0.35 # 65% drop in usage
+            phase_mult = 0.2
         elif phase == 'Exam': 
-            phase_mult = 1.15 # 15% increase in focus areas
+            phase_mult = 1.3
         
-        # 5. FINAL CALCULATION ENGINE
-        usage = base_capacity * (occ/100) * time_mult * day_mult * phase_mult
+        # 6. COMPLEX INTERACTION ENGINE
+        # Usage is no longer a simple product of independent sliders
+        usage = base_capacity * occ_factor * time_factor * day_mult * phase_mult
         
-        # Add 10% Gaussian Noise (Simulates real-world sensor fluctuations)
-        usage += np.random.normal(0, usage * 0.1)
+        # Add Interaction: If occupancy is high AND it's a peak time, add a 'surge'
+        if occ > 80 and (7 <= hour <= 10 or 19 <= hour <= 22):
+            usage *= 1.25
+            
+        # Add 25% Heavy Noise (Real-time simulation variance)
+        noise = np.random.normal(0, usage * 0.25)
+        usage += noise
         
-        # Safety Hard-Cap for Realistic Limits
-        usage = min(usage, 7000) if b_type == 'Hostel' else min(usage, 4000)
+        # Add random spikes (Leaks/Maintenance)
+        if np.random.random() < 0.02: # 2% chance of a leak
+            usage += np.random.randint(500, 2000)
+
+        # Final Cleaning
+        usage = abs(round(usage, 2))
         
         data.append({
             'building_type': b_type,
@@ -75,14 +85,14 @@ def setup_sql_database(num_records=2500):
             'academic_phase': phase,
             'occupancy_percentage': occ,
             'time_of_day': hour,
-            'consumption_liters': abs(round(usage, 2))
+            'consumption_liters': usage
         })
     
     df_gen = pd.DataFrame(data)
     
-    # CONNECT TO SQL (Ensures data is appendable and persistent)
+    # CONNECT TO SQL (Fresh database)
     conn = sqlite3.connect('campus_water.db') 
-    df_gen.to_sql('water_records', conn, if_exists='append', index=False)
+    df_gen.to_sql('water_records', conn, if_exists='replace', index=False)
     conn.close()
     
     print(f"[SUCCESS] Database created with {len(df_gen)} records.")
@@ -90,3 +100,4 @@ def setup_sql_database(num_records=2500):
 
 if __name__ == "__main__":
     setup_sql_database()
+

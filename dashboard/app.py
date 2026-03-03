@@ -67,7 +67,11 @@ with st.sidebar:
     if model:
         st.success("✅ AI Engine: Online")
         st.info(f"📅 Deployed: {metadata['train_date']}")
-        st.info(f"📊 Verified Accuracy: {metadata['accuracy']*100:.1f}%")
+        st.info(f"📊 Accuracy (R2): {metadata['accuracy']*100:.1f}%")
+        st.info(f"🎯 F1 Score: {metadata.get('f1_score', 0)*100:.1f}%")
+        st.info(f"🔍 Recall: {metadata.get('recall', 0)*100:.1f}%")
+        st.markdown(f"**Recall Threshold:** {metadata.get('threshold', 0):.0f}L")
+        st.caption("Note: .pkl file stores the pre-trained neural patterns (Saved State).")
     else:
         st.error("❌ AI Model Offline")
         st.warning("Run train_model.py to deploy.")
