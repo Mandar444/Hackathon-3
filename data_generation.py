@@ -2,84 +2,93 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import os
+from datetime import datetime, timedelta
 
 """
-DATA GENERATION ENGINE (For Faculty Review)
-------------------------------------------
-This script simulates 2,500 hourly water consumption records for a university campus.
-The logic is based on 5 primary factors to ensure the 'Deep Learning' model has 
-realistic patterns to learn from.
-
-MATHEMATICAL LOGIC:
-1. Base Capacity: Hostels have a higher baseline than Academic blocks.
-2. Time Factor: Morning (6-9 AM) and Evening (6-9 PM) spikes simulate showers/cooking.
-3. Day Factor: Weekends reduce Academic load but maintain/increase Hostel load.
-4. Phase Factor: 'Exam' season slightly increases load; 'Vacation' drops it by 60%.
-5. Occupancy: A linear multiplier representing the percentage of people in the building.
+DATA GENERATION ENGINE v5.0 (Resilient & Non-Linear)
+--------------------------------------------------
+Simulates campus water consumption with complex interactions, 
+stochastic noise, and drift patterns.
 """
 
-def setup_sql_database(num_records=10000):
-    np.random.seed(42)
-    data = []
+def generate_records(num_records, start_date=None, existing_df=None):
+    np.random.seed(None) # Truly random
     
     building_types = ['Hostel', 'Academic', 'Lab']
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     phases = ['Normal', 'Exam', 'Vacation']
     
-    print(f"--- Generating {num_records} Complex Non-Linear Records ---")
+    if start_date is None:
+        start_date = datetime(2024, 1, 1, 0, 0)
+    
+    data = []
+    current_time = start_date
 
-    for _ in range(num_records):
+    for i in range(num_records):
         b_type = np.random.choice(building_types)
-        day = np.random.choice(days)
-        phase = np.random.choice(phases, p=[0.7, 0.2, 0.1])
-        hour = np.random.randint(0, 24)
+        day = current_time.strftime('%A')
+        # Phase logic: 70% Normal, 20% Exam, 10% Vacation
+        # We can simulate seasons based on months
+        month = current_time.month
+        if month in [5, 6, 12]: # Vacation months
+            phase = 'Vacation'
+        elif month in [4, 11]: # Exam months
+            phase = 'Exam'
+        else:
+            phase = 'Normal'
+            
+        hour = current_time.hour
         occ = np.random.randint(10, 100)
         
         # 1. BASE CAPACITY
-        base_capacity = 4000 if b_type == 'Hostel' else 2100
+        base_capacity = 4200 if b_type == 'Hostel' else 2200
         
-        # 2. NON-LINEAR TIME OF DAY (Sinusoidal waves instead of step functions)
-        # Main peak at 8 AM and 8 PM
-        time_factor = (np.sin((hour - 8) * (2 * np.pi / 24)) + 1) / 2
-        # Secondary peak/variance
-        time_factor += 0.5 * (np.cos((hour - 20) * (2 * np.pi / 24)) + 1) / 2
+        # 2. NON-LINEAR TIME OF DAY (Multiple harmonic waves)
+        # Primary peak at 8 AM, secondary peak at 8 PM
+        time_factor = 0.6 * np.exp(-((hour - 8)**2) / 8) + 0.4 * np.exp(-((hour - 20)**2) / 12)
+        # Add baseline usage
+        time_factor += 0.15 * np.random.random()
         
-        # 3. NON-LINEAR OCCUPANCY (Polynomial relationship)
-        # Usage isn't just occ/100; maybe it's quadratic (small crowds use less, large crowds use exponentially more)
-        occ_factor = (occ / 100) ** 1.5 
+        # 3. NON-LINEAR OCCUPANCY (Sigmoid relationship: saturation effect)
+        # Low occupancy = zero usage, medium = rapid growth, high = saturation
+        occ_norm = occ / 100
+        occ_factor = 1 / (1 + np.exp(-10 * (occ_norm - 0.5)))
         
         # 4. WEEKEND VS WEEKDAY (Interaction effect)
         day_mult = 1.0
         if day in ['Saturday', 'Sunday']:
-            day_mult = 1.2 if b_type == 'Hostel' else 0.2
+            day_mult = 1.3 if b_type == 'Hostel' else 0.15
             
         # 5. PHASE INFLUENCE
         phase_mult = 1.0
         if phase == 'Vacation': 
-            phase_mult = 0.2
+            phase_mult = 0.1
         elif phase == 'Exam': 
-            phase_mult = 1.3
+            phase_mult = 1.4
         
-        # 6. COMPLEX INTERACTION ENGINE
-        # Usage is no longer a simple product of independent sliders
-        usage = base_capacity * occ_factor * time_factor * day_mult * phase_mult
+        # 6. DRIFT SIMULATION (Long term efficiency or scaling)
+        # Simulate slight increase in usage over records (e.g., student population growth)
+        drift = 1.0 + (i / 10000) * 0.1 # 10% growth over 10k records
+        
+        # 7. COMPLEX INTERACTION ENGINE
+        usage = base_capacity * occ_factor * time_factor * day_mult * phase_mult * drift
         
         # Add Interaction: If occupancy is high AND it's a peak time, add a 'surge'
-        if occ > 80 and (7 <= hour <= 10 or 19 <= hour <= 22):
-            usage *= 1.25
+        if occ > 85 and (7 <= hour <= 10 or 19 <= hour <= 22):
+            usage *= 1.3
             
-        # Add 25% Heavy Noise (Real-time simulation variance)
-        noise = np.random.normal(0, usage * 0.25)
+        # Add Stochastic Noise
+        noise = np.random.normal(0, usage * 0.15) # 15% noise
         usage += noise
         
         # Add random spikes (Leaks/Maintenance)
-        if np.random.random() < 0.02: # 2% chance of a leak
-            usage += np.random.randint(500, 2000)
+        if np.random.random() < 0.015: # 1.5% chance
+            usage += np.random.randint(800, 3000)
 
-        # Final Cleaning
         usage = abs(round(usage, 2))
         
         data.append({
+            'timestamp': current_time.strftime('%Y-%m-%d %H:%M:%S'),
             'building_type': b_type,
             'day_of_week': day,
             'academic_phase': phase,
@@ -87,17 +96,42 @@ def setup_sql_database(num_records=10000):
             'time_of_day': hour,
             'consumption_liters': usage
         })
+        
+        # Increment time by 1 hour
+        current_time += timedelta(hours=1)
+        
+    return pd.DataFrame(data)
+
+def update_database(num_records=2000):
+    db_path = 'campus_water.db'
+    conn = sqlite3.connect(db_path)
     
-    df_gen = pd.DataFrame(data)
-    
-    # CONNECT TO SQL (Fresh database)
-    conn = sqlite3.connect('campus_water.db') 
-    df_gen.to_sql('water_records', conn, if_exists='replace', index=False)
-    conn.close()
-    
-    print(f"[SUCCESS] Database created with {len(df_gen)} records.")
-    print(f"[INFO] Location: campus_water.db")
+    try:
+        # Check if table exists
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='water_records'")
+        exists = cursor.fetchone()
+        
+        if exists:
+            # Get latest timestamp
+            last_df = pd.read_sql("SELECT timestamp FROM water_records ORDER BY timestamp DESC LIMIT 1", conn)
+            start_date = datetime.strptime(last_df['timestamp'].iloc[0], '%Y-%m-%d %H:%M:%S') + timedelta(hours=1)
+            print(f"--- Appending {num_records} New Randomized Records ---")
+            new_df = generate_records(num_records, start_date=start_date)
+            new_df.to_sql('water_records', conn, if_exists='append', index=False)
+        else:
+            print(f"--- Initializing Database with 10,000 Records ---")
+            new_df = generate_records(10000)
+            new_df.to_sql('water_records', conn, if_exists='replace', index=False)
+            
+        conn.close()
+        print(f"[SUCCESS] Database updated at {db_path}")
+    except Exception as e:
+        conn.close()
+        print(f"[ERROR] Database update failed: {e}")
 
 if __name__ == "__main__":
-    setup_sql_database()
+    # If the user wants to update with 2000, we call with 2000
+    update_database(2000)
+
 
